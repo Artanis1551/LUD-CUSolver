@@ -40,7 +40,7 @@ all : $(EXECUTABLE)
 
 
 $(EXECUTABLE) : $(OBJS)
-	$(NVCC) $(NVCCFLAGS) -o $@  $? $(LDFLAGS) -lcusolver
+	$(NVCC) $(NVCCFLAGS) -o $@  $? $(LDFLAGS)
 
 clean:
 	rm -f $(EXECUTABLE) $(OBJS) *.linkinfo

@@ -38,7 +38,7 @@
 
 //initializes do_verify
 static int do_verify = 0;
-static int cuSolve = 1;
+static int cuSolve = 0;
 
 //Options for matrix
 static struct option long_options[] = {
@@ -69,7 +69,7 @@ main ( int argc, char *argv[] )
   stopwatch sw;
 
   //Gets option from run call (loops for all options)
-  while ((opt = getopt_long(argc, argv, "::vs:i:", 
+  while ((opt = getopt_long(argc, argv, "::vcs:i:", 
                             long_options, &option_index)) != -1 ) {
     switch(opt){
     //if option -i read input values from input file

@@ -196,13 +196,13 @@ void lud_cuda(double *m, int matrix_dim, int choice)
 {
   int i=0;
   dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
-  double *m_debug = (double*)malloc(matrix_dim*matrix_dim*sizeof(double));
-
+  
   stopwatch func;
 
   if(choice == 1)
   {
-    printf("Using library...\n");
+    printf("Using library\n");
+    stopwatch_start(&func);
     cusolverDnHandle_t handle;
     cusolverDnCreate(&handle);
 
@@ -213,15 +213,14 @@ void lud_cuda(double *m, int matrix_dim, int choice)
       cusolverDnDgetrf_bufferSize(handle, matrix_dim, matrix_dim, m, matrix_dim, &bufferSize);
 
       double* buffer;
-      cudaMalloc((void**)&buffer, bufferSize);
+      cudaMalloc((void**)&buffer, bufferSize * sizeof(double));
 
       int* devInfo;
       cudaMalloc((void**)&devInfo, sizeof(int));
 
-    stopwatch_start(&func);
     cusolverStatus_t status = cusolverDnDgetrf(handle, matrix_dim, matrix_dim, m, matrix_dim, buffer, devIpiv, devInfo);
     cudaDeviceSynchronize();
-    stopwatch_stop(&func);
+    
 
     int* hostInfo = (int*)malloc(sizeof(int));
     cudaMemcpy(hostInfo, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
@@ -237,9 +236,9 @@ void lud_cuda(double *m, int matrix_dim, int choice)
     cudaFree(devInfo);
 
     cusolverDnDestroy(handle);
-
+    stopwatch_stop(&func);
   }else{
-    printf("Using rodinia...");
+    printf("Using rodinia\n");
     stopwatch_start(&func);
     for (i=0; i < matrix_dim-BLOCK_SIZE; i += BLOCK_SIZE) {
       lud_diagonal<<<1, BLOCK_SIZE>>>(m, matrix_dim, i);
@@ -248,6 +247,7 @@ void lud_cuda(double *m, int matrix_dim, int choice)
       lud_internal<<<dimGrid, dimBlock>>>(m, matrix_dim, i);
     }
     lud_diagonal<<<1,BLOCK_SIZE>>>(m, matrix_dim, i);
+    cudaDeviceSynchronize();
     stopwatch_stop(&func);
   }
 
