@@ -199,44 +199,56 @@ void lud_cuda(double *m, int matrix_dim, int choice)
   
   stopwatch func;
 
+  //If c was chosen as option run cuSolve version otherwise run rodinia implementation
   if(choice == 1)
   {
     printf("Using library\n");
+    //Creating cusolver handle and function timer
     stopwatch_start(&func);
     cusolverDnHandle_t handle;
     cusolverDnCreate(&handle);
 
-      int* devIpiv;
-      cudaMalloc((void**)&devIpiv, matrix_dim * sizeof(int));
+    //Creating array to store permutation of rows during LU decomposition
+    int* devIpiv;
+    cudaMalloc((void**)&devIpiv, matrix_dim * sizeof(int));
 
-      int bufferSize;
-      cusolverDnDgetrf_bufferSize(handle, matrix_dim, matrix_dim, m, matrix_dim, &bufferSize);
+    //Obtain bufferSize needed for cuSolve LUD
+    int bufferSize;
+    cusolverDnDgetrf_bufferSize(handle, matrix_dim, matrix_dim, m, matrix_dim, &bufferSize);
 
-      double* buffer;
-      cudaMalloc((void**)&buffer, bufferSize * sizeof(double));
+    //Allocate memory for buffer
+    double* buffer;
+    cudaMalloc((void**)&buffer, bufferSize * sizeof(double));
 
-      int* devInfo;
-      cudaMalloc((void**)&devInfo, sizeof(int));
+    //Create variable to store error messages from parameters
+    int* devInfo;
+    cudaMalloc((void**)&devInfo, sizeof(int));
 
+    //Run CuSolve LUD and store error message in status
     cusolverStatus_t status = cusolverDnDgetrf(handle, matrix_dim, matrix_dim, m, matrix_dim, buffer, devIpiv, devInfo);
     cudaDeviceSynchronize();
     
-
+    //Copy over dev info to host info
     int* hostInfo = (int*)malloc(sizeof(int));
     cudaMemcpy(hostInfo, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
     
+    //Check for errors from cusolverDnDgetrf and print them out if error occurs
     if (status != CUSOLVER_STATUS_SUCCESS || *hostInfo != 0) {
       fprintf(stderr, "cusolverDnDgetrf failed. Status: %d, devInfo: %d\n", status, *hostInfo);
     } else {
       printf("cusolverDnDgetrf succeeded\n");
     }
 
+    //free allocated memory
     cudaFree(devIpiv);
     cudaFree(buffer);
     cudaFree(devInfo);
-
+    
+    //Destroy handle and stop function timer
     cusolverDnDestroy(handle);
     stopwatch_stop(&func);
+
+  //If option c is not chosen rodinia implementation is executed
   }else{
     printf("Using rodinia\n");
     stopwatch_start(&func);
