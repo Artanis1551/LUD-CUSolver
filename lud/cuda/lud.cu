@@ -88,6 +88,7 @@ main ( int argc, char *argv[] )
       // fprintf(stderr, "Usage: %s [-v] [-s matrix_size|-i input_file]\n", argv[0]);
       // exit(EXIT_FAILURE);
       break;
+    //if option -c run cuSolve implementation
     case 'c':
       cuSolve = 1;
     break;
@@ -174,6 +175,7 @@ main ( int argc, char *argv[] )
     //printf("After LUD\n");
     //print_matrix(m, matrix_dim);
     printf(">>>Verify<<<<\n");
+    //cuSolve and rodinia implementation slightly differs due to 
     lud_verify(mm, m, matrix_dim, cuSolve); 
     free(mm);
   }
